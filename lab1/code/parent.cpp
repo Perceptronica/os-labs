@@ -1,77 +1,90 @@
 #include <iostream>
-#include <string>
+#include <sys/types.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-
-const int PATH_MAX = 4096;
-const int BUFFER_SIZE = 256;
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
-enum pipe {READ = 0, WRITE = 1};
+// READ - 0
+// WRITE - 1
 
-int main(void) {
-    // читаем, куда писать ответ:
-    string filename = "\0";
-    cout << "enter output file: ";
+#define MAX_LEN 100
+
+int main() {
+    string filename;
+    cout << "enter the output file: ";
     getline(cin, filename);
-    if (filename == "" || filename.size() > PATH_MAX) {
-        filename = "output.txt";
+    if (filename.empty()) {
+        perror("getline error");
+        exit(EXIT_FAILURE);
     }
 
     int fd1[2], fd2[2];
-    if (pipe(fd1) == -1 || pipe(fd2) == -1) {
-        cerr << "pipe error!" << endl;
+    if ((pipe(fd1) == -1) || (pipe(fd2) == -1)) {
+        perror("pipe error");
+        exit(EXIT_FAILURE);
     }
 
-    int pid = fork(); // создание дочернего процесса
+    int pid = fork();
+    
     if (pid < 0) {
-        cerr << "fork creating error!" << endl;
-    } else if (pid == 0) { // child process
-        close(fd1[WRITE]);
-        close(fd2[READ]);
-        
-        if (dup2(fd1[READ], fileno(stdin)) == -1) {
-            cerr << "dup2 failure! (1)" << endl;
+        perror("fork error");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        close(fd1[1]);
+        close(fd2[0]);
+        if (dup2(fd1[0], fileno(stdin)) != 0) {
+            perror("dup2 error: child, stdin");
+            exit(EXIT_FAILURE);
         }
-
-        close(fd1[READ]);
-
-        if(dup2(fd2[WRITE], fileno(stdout)) == -1) {
-            cerr << "dup2 failure! (2)" << endl;
+        if (execl("./child", "child", filename.c_str(), NULL) == -1) {
+            perror("execl failure");
+            exit(EXIT_FAILURE);
         }
-
-        //close(fd2[WRITE]);
-
-        if (execl("child", "child", filename.c_str(), NULL) != 0) {
-            cerr << "execl error!" << endl;
+    } else {
+        close(fd1[0]);
+        close(fd2[1]);
+        if (write(fd1[1], &fd2[1], sizeof(float)) != sizeof(float)) {
+            perror("write failure");
+            exit(EXIT_FAILURE);
         }
-    } else { // parent process
-        close(fd1[READ]);
-        close(fd2[WRITE]);
+        while (true) {
+            string command;
+            float num;
+            float input_arr[MAX_LEN];
+            int i = 0;
+            getline(cin, command);
+            stringstream ss(command, ios_base::in);
+            while (command != "exit" && (ss >> num)) {
+                if (i >= MAX_LEN) {
+                    cerr << "error: max " << MAX_LEN << " numbers" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                input_arr[i] = num;
+                ++i;
+            }
 
-        if (dup2(fd1[WRITE], fileno(stdout)) == -1) {
-            cerr << "dup2 failure! (3)" << endl;
+            if (command == "exit") {
+                int code = -1;
+                if (write(fd1[1], &code, sizeof(float)) != sizeof(float)) {
+                    perror("writing to pipe failure");
+                } 
+                break;
+            }
+
+            if (write(fd1[1], &i, sizeof(float)) != sizeof(float) ||
+                write(fd1[1], input_arr, sizeof(float) * i) != sizeof(float) * i) {
+                perror("writing to pipe failure");
+                exit(EXIT_FAILURE);
+            }
         }
-
-        bool should_exit = false;
-        string input_line;
-        
-        while(!should_exit) {
-            getline(cin, input_line);
-            if (input_line.find("exit") != string::npos) { should_exit = true; }
-            write(fd1[WRITE], input_line.c_str(), input_line.size() + 1);
-            if (should_exit) { break; }
-        }
-
-        int status;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status)) {
-            cout << "child exited with status" << WIFEXITED(status) << endl;
-        }
-
-        close(fd1[WRITE]);
-        close(fd2[READ]);
+        close(fd1[1]);
+        close(fd2[0]);
     }
     return 0;
 }

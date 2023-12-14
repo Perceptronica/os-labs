@@ -1,51 +1,47 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <string>
 #include <vector>
-#include <cstdlib>
+#include <sstream>
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        cerr << "usage: child <filename>" << endl;
-        return 1;
+        perror("incorrect arguments");
+        exit(EXIT_FAILURE);
     }
 
-    ofstream outfile(argv[1], ios::binary);
-    if (!outfile.is_open()) {
-        cerr << "file opening error!" << endl;
-        return 1;
-    }
+    string filename(argv[1]);
+    ofstream outfile(filename, ofstream::app);
+    string input;
     
-    string line;
-    float num, divisor, result;
-
-    while(getline(cin, line)) {
-        istringstream iss(line);
-        vector<float> numbers;
-        
-        while (iss >> num) { numbers.push_back(num); }
-
-        if (numbers.size() < 2) {
-            if (line.find("exit") != string::npos) { break; }
-            cerr << "not enough numbers provided!" << endl;
-            continue;
-        }
-
-        result = numbers[0];
-        for (size_t i = 1; i < numbers.size(); ++i) {
-            divisor = numbers[i];
-            if (divisor == 0) {
-                cerr << "division by 0 -> terminating" << endl;
-                outfile.close();
-                return 1;
-            }
-            result /= divisor;
-        }
-        outfile << result << '\n';
+    if (!outfile.is_open()) {
+        perror("failed to open file");
+        exit(EXIT_FAILURE);
     }
+    cout << "enter the strings of numbers:" << endl;
+    while (getline(cin, input)) {
+        istringstream iss(input);
+        vector<float> nums;
+        float num;
 
+        while (iss >> num) {
+            nums.push_back(num);
+        }
+
+        if (nums.empty()) continue;
+
+        float result = nums[0];
+        for (size_t i = 1; i < nums.size(); ++i) {
+            if (nums[i] == 0) {
+                perror("exit: division by zero"); // Сообщаем родителю о необходимости выхода
+                exit(EXIT_FAILURE); // Выходим из программы
+            }
+            result /= nums[i];
+        }
+        outfile << result << endl; // Записываем результат в файл
+    }
     outfile.close();
     return 0;
 }
