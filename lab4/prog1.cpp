@@ -6,6 +6,9 @@ using namespace std;
 
 int main() {
     string command;
+    cout << "1 for cos derivative" << endl;
+    cout << "2 for GCD(a, b)"<< endl;
+    cout << "3 for exit" << endl;
     while (getline(cin, command)) {
         stringstream stream(command);
         int funcNumber;
@@ -13,7 +16,7 @@ int main() {
         if (funcNumber == 1) {
             float a, delta;
             stream >> a >> delta;
-            cout << "cos(" << a << ") = " << Derivative(a, delta) << "\n";
+            cout << "cos'(" << a << ") = " << Derivative(a, delta) << "\n";
         } else if (funcNumber == 2) {
             int A, B;
             stream >> A >> B;
