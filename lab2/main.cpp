@@ -13,32 +13,12 @@ int main(int argc, char* argv[]) {
 
     int max_threads = stoi(argv[1]);
     assert(max_threads > 0);
-    int N[] = {100, 1000, 2000};
-    /*
-    cout << "enter the size of the matrixes (n rows * m cols): ";
-    cin >> n >> m;
-    */
-    /*
-    cout << "matrix A: " << endl;
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < m; ++j) {
-            cout << A[i][j] << ' ';
-        }
-        cout << endl;
-    }
-    cout << "B:" << endl;
-    for (auto& x : B) {
-        cout << x << ' ';
-    }
-    cout << endl;
-    */
-    //cout << "Threads,N,M,Time(ms)" << endl; 
-    for (int &k : N) {
+    int N[] = {1000};
+    for (int& k : N) {
         int n = k;
         int m = k;
         Matrix A(n, Row(m));
         Row B(m);
-        // randomizing...
         random_device rd;
         mt19937 gen(rd()); // генератор Мерсенна Твистера, 
                         // инициализируется неким уникальным числом из random_device rd
@@ -59,6 +39,11 @@ int main(int argc, char* argv[]) {
             GaussianElimination(A, B, i);
             end = chrono::steady_clock::now();
             auto time = chrono::duration_cast<chrono::milliseconds>(end - start);
+            int t = 0;
+            if (i == 1) {
+                t = (int) time.count();
+            }
+            double s_p = (int) time / t;
             cout << i << "," << n << "," << m << "," << to_string(time.count()) << endl;
         }
     }

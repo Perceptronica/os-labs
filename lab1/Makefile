@@ -1,10 +1,10 @@
-all: parent child
+all: parent.out child.out
 
-parent:
-	g++ -o parent parent.cpp
+parent.out:
+	g++ -o parent.out parent.cpp
 
-child:
-	g++ -o child child.cpp
+child.out:
+	g++ -o child.out child.cpp
 
 clean:
-	rm -r parent child
+	rm -r *.out *.txt

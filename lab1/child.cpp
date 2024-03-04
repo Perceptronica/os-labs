@@ -1,55 +1,45 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
 #include <vector>
-
-using namespace std;
+#include <iostream>
+#include <string>
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        cerr << "the wrong argument" << endl;
+    std::string err = "1";
+    int myfile = open(argv[1], O_CREAT | O_WRONLY, S_IRWXU);
+
+    if (myfile == -1) {
+        err = "2";
+        std::cout << err;
+        fflush(stdout);
         exit(EXIT_FAILURE);
     }
     
-    const char *filename = argv[1];
-    ofstream file(filename);
-    
-    if (!file.is_open()) {
-        cerr << "file opening failure" << endl;
-        exit(EXIT_FAILURE);
-    }
-    
-    string line;
-    while (getline(cin, line)) {
-        istringstream iss(line);
-        vector<float> numbers;
-        float num;
-        bool zero_flag = false;
-        while (iss >> num) {
-            numbers.push_back(num);
-        }
-        
-        if (numbers.size() < 2) {
-            cerr << "not enough numbers" << endl;
-            continue;
-        }
-        
-        float result = numbers[0];
-        for (size_t i = 1; i < numbers.size(); ++i) {
-            if (numbers[i] == 0) {
-                cerr << "error: division by zero" << endl;
-                zero_flag = true;
-                break;
+    float x, res;
+    int n, i;
+    while (std::cin >> n) {
+        for (i = 0; i < n; ++i) {
+            std::cin >> x;
+            if (i == 0) {
+                res = x;
+            } else {
+                if (x == 0) {
+                    err = "0";
+                    std::cout << err;
+                    fflush(stdout);
+                    close(myfile);
+                    exit(EXIT_FAILURE);
+                } else if (i > 0) {
+                    res /= x;
+                }
             }
-            result /= numbers[i];
         }
-        if (!zero_flag) {
-            file << result << endl;
-        } else {
-            zero_flag = false;
-        }
+        dprintf(myfile, "%f\n", res);
+        fflush(stdout);
+        std::cout << err;
+        fflush(stdout);
     }
-    
-    file.close();
+    close(myfile);
     return 0;
 }
