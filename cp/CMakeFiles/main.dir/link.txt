@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/json_parser/json.cpp.o CMakeFiles/main.dir/graph_checker/graph_checker.cpp.o -o main 

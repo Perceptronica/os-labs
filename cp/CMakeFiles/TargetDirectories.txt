@@ -1,0 +1,4 @@
+/home/anton/os-labs/cp/CMakeFiles/main.dir
+/home/anton/os-labs/cp/CMakeFiles/timer.dir
+/home/anton/os-labs/cp/CMakeFiles/edit_cache.dir
+/home/anton/os-labs/cp/CMakeFiles/rebuild_cache.dir
